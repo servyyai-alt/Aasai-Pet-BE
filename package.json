@@ -1,7 +1,7 @@
 {
-  "name": "aquamart-server",
+  "name": "AasaiPet-server",
   "version": "1.0.0",
-  "description": "AquaMart Backend API",
+  "description": "AasaiPet Backend API",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

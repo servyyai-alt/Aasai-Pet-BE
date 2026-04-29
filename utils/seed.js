@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config({ path: './server/.env' });
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/aquamart';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/AasaiPet';
 
 const UserSchema = new mongoose.Schema({ name: String, email: { type: String, unique: true }, password: String, role: { type: String, default: 'user' }, isBlocked: { type: Boolean, default: false } }, { timestamps: true });
 const CategorySchema = new mongoose.Schema({ name: String, slug: String, description: String, image: String, isActive: { type: Boolean, default: true } }, { timestamps: true });
@@ -27,11 +27,11 @@ async function seed() {
     console.log('✅ Connected to MongoDB');
 
     // Create admin
-    const adminExists = await User.findOne({ email: 'admin@aquamart.com' });
+    const adminExists = await User.findOne({ email: 'admin@AasaiPet.com' });
     if (!adminExists) {
       const hashedPwd = await bcrypt.hash('Admin@123', 12);
-      await User.create({ name: 'Admin', email: 'admin@aquamart.com', password: hashedPwd, role: 'admin' });
-      console.log('✅ Admin user created: admin@aquamart.com / Admin@123');
+      await User.create({ name: 'Admin', email: 'admin@AasaiPet.com', password: hashedPwd, role: 'admin' });
+      console.log('✅ Admin user created: admin@AasaiPet.com / Admin@123');
     } else {
       console.log('ℹ️  Admin user already exists');
     }
@@ -46,7 +46,7 @@ async function seed() {
 
     await mongoose.disconnect();
     console.log('\n🎉 Seed complete!');
-    console.log('   Admin login: admin@aquamart.com / Admin@123');
+    console.log('   Admin login: admin@AasaiPet.com / Admin@123');
   } catch (err) {
     console.error('❌ Seed failed:', err.message);
     process.exit(1);
