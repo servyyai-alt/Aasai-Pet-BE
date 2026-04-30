@@ -17,7 +17,7 @@ app.use(
         : "http://localhost:3000" || "https://aasai-pet-fe.vercel.app",
 
     credentials: true,
-  }),s
+  }),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
