@@ -9,16 +9,34 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.CLIENT_URL
-        : "http://localhost:3000" || "https://aasai-pet-fe.vercel.app",
+const parseOrigins = (value) =>
+  String(value || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-    credentials: true,
-  }),
-);
+const defaultOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
+const allowedOrigins = [
+  ...parseOrigins(process.env.CORS_ORIGINS),
+  ...parseOrigins(process.env.CLIENT_URL),
+];
+const uniqueAllowedOrigins = Array.from(new Set(allowedOrigins));
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    const allowlist =
+      uniqueAllowedOrigins.length > 0 ? uniqueAllowedOrigins : defaultOrigins;
+    if (allowlist.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: origin not allowed: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
