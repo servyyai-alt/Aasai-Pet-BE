@@ -15,19 +15,26 @@ const parseOrigins = (value) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-const defaultOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
+const defaultOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5000",
+  "http://127.0.0.1:5000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
 const allowedOrigins = [
   ...parseOrigins(process.env.CORS_ORIGINS),
   ...parseOrigins(process.env.CLIENT_URL),
 ];
-const uniqueAllowedOrigins = Array.from(new Set(allowedOrigins));
+const uniqueAllowedOrigins = Array.from(
+  new Set([...defaultOrigins, ...allowedOrigins]),
+);
 
 const corsOptions = {
   origin(origin, callback) {
     if (!origin) return callback(null, true);
-    const allowlist =
-      uniqueAllowedOrigins.length > 0 ? uniqueAllowedOrigins : defaultOrigins;
-    if (allowlist.includes(origin)) return callback(null, true);
+    if (uniqueAllowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error(`CORS: origin not allowed: ${origin}`));
   },
   credentials: true,
