@@ -4,9 +4,10 @@ const { cloudinary } = require('../config/cloudinary');
 
 // @GET /api/products
 const getProducts = asyncHandler(async (req, res) => {
-  const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 12;
-  const skip = (page - 1) * limit;
+  const hasSkip = req.query.skip !== undefined && req.query.skip !== null && req.query.skip !== '';
+  const skip = hasSkip ? Math.max(0, Number(req.query.skip) || 0) : ((Number(req.query.page) || 1) - 1) * limit;
+  const page = hasSkip ? Math.floor(skip / limit) + 1 : (Number(req.query.page) || 1);
 
   const query = { isActive: true };
   if (req.query.category) query.category = req.query.category;
@@ -34,7 +35,9 @@ const getProducts = asyncHandler(async (req, res) => {
 // @GET /api/products/featured
 const getFeaturedProducts = asyncHandler(async (req, res) => {
   const products = await Product.find({ isFeatured: true, isActive: true })
-    .populate('category', 'name').limit(8);
+    .populate('category', 'name')
+    .sort({ createdAt: -1 })
+    .limit(8);
   res.json(products);
 });
 
