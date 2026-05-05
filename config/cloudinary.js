@@ -19,4 +19,21 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-module.exports = { cloudinary, upload };
+const galleryStorage = new CloudinaryStorage({
+  cloudinary,
+  params: (req, file) => {
+    const isVideo = Boolean(file?.mimetype && file.mimetype.startsWith('video/'));
+    return {
+      folder: 'AasaiPet/gallery',
+      resource_type: isVideo ? 'video' : 'image',
+      allowed_formats: isVideo
+        ? ['mp4', 'webm', 'mov', 'm4v']
+        : ['jpg', 'jpeg', 'png', 'webp'],
+      ...(isVideo ? {} : { transformation: [{ width: 1400, height: 1400, crop: 'limit' }] }),
+    };
+  },
+});
+
+const galleryUpload = multer({ storage: galleryStorage });
+
+module.exports = { cloudinary, upload, galleryUpload };
