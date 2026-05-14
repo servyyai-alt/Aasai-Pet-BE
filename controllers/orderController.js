@@ -4,13 +4,47 @@ const Product = require('../models/Product');
 
 // @POST /api/orders
 const createOrder = asyncHandler(async (req, res) => {
-  const { orderItems, shippingAddress, paymentMethod, itemsPrice, taxPrice, shippingPrice, totalPrice } = req.body;
+  const { orderItems, shippingAddress, paymentMethod } = req.body;
   if (!orderItems || orderItems.length === 0) {
     res.status(400); throw new Error('No order items');
   }
+
+  const productIds = orderItems.map(i => i.product);
+  const products = await Product.find({ _id: { $in: productIds } });
+  const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
+  const normalizedItems = orderItems.map(i => {
+    const p = productMap.get(i.product.toString());
+    if (!p) {
+      res.status(400);
+      throw new Error('One or more products are invalid');
+    }
+    return {
+      product: p._id,
+      name: p.name,
+      image: p.images?.[0]?.url,
+      price: Number(p.discountPrice || p.price),
+      quantity: Number(i.quantity) || 1,
+    };
+  });
+
+  const itemsPrice = normalizedItems.reduce((acc, i) => acc + i.price * i.quantity, 0);
+  const shippingPrice = normalizedItems.reduce((acc, i) => {
+    const p = productMap.get(i.product.toString());
+    return acc + (Number(p?.shippingCharge || 0) * i.quantity);
+  }, 0);
+  const taxPrice = Math.round(itemsPrice * 0.18);
+  const totalPrice = itemsPrice + shippingPrice + taxPrice;
+
   const order = await Order.create({
-    user: req.user._id, orderItems, shippingAddress, paymentMethod,
-    itemsPrice, taxPrice, shippingPrice, totalPrice
+    user: req.user._id,
+    orderItems: normalizedItems,
+    shippingAddress,
+    paymentMethod: paymentMethod || 'razorpay',
+    itemsPrice,
+    taxPrice,
+    shippingPrice,
+    totalPrice,
   });
   res.status(201).json(order);
 });

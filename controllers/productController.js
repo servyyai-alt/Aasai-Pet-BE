@@ -50,12 +50,13 @@ const getProduct = asyncHandler(async (req, res) => {
 
 // @POST /api/products (admin)
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, discountPrice, category, stock, brand, tags, specifications, isFeatured } = req.body;
+  const { name, description, price, discountPrice, shippingCharge, category, stock, brand, tags, specifications, isFeatured } = req.body;
   const images = req.files ? req.files.map(f => ({ url: f.path, public_id: f.filename })) : [];
   const product = await Product.create({
     name, description, price, discountPrice, category, stock, brand,
     tags: tags ? JSON.parse(tags) : [],
     specifications: specifications ? JSON.parse(specifications) : [],
+    shippingCharge: shippingCharge !== undefined && shippingCharge !== '' ? Number(shippingCharge) : 0,
     isFeatured, images,
     sku: `SKU-${Date.now()}`
   });
@@ -69,6 +70,9 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   const fields = ['name', 'description', 'price', 'discountPrice', 'category', 'stock', 'brand', 'isFeatured', 'isActive'];
   fields.forEach(f => { if (req.body[f] !== undefined) product[f] = req.body[f]; });
+  if (req.body.shippingCharge !== undefined) {
+    product.shippingCharge = req.body.shippingCharge === '' ? 0 : Number(req.body.shippingCharge);
+  }
   if (req.body.tags) product.tags = JSON.parse(req.body.tags);
   if (req.body.specifications) product.specifications = JSON.parse(req.body.specifications);
   if (req.files && req.files.length > 0) {
