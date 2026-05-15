@@ -108,4 +108,31 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   res.json(updated);
 });
 
-module.exports = { createOrder, getMyOrders, getOrder, updateOrderToPaid, getAllOrders, updateOrderStatus };
+// @PUT /api/orders/:id/cancel (user)
+const cancelMyOrder = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) { res.status(404); throw new Error('Order not found'); }
+  if (order.user.toString() !== req.user._id.toString()) {
+    res.status(403); throw new Error('Not authorized');
+  }
+  if (!order.isPaid) {
+    res.status(400); throw new Error('Order can be cancelled only after payment');
+  }
+  if (order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered') {
+    res.status(400); throw new Error('Order cannot be cancelled after it is shipped');
+  }
+  if (order.orderStatus === 'Cancelled') {
+    res.status(400); throw new Error('Order is already cancelled');
+  }
+  const reason = String(req.body?.cancelReason || '').trim();
+  if (!reason) {
+    res.status(400); throw new Error('Cancel reason is required');
+  }
+
+  order.orderStatus = 'Cancelled';
+  order.cancelReason = reason;
+  const updated = await order.save();
+  res.json(updated);
+});
+
+module.exports = { createOrder, getMyOrders, getOrder, updateOrderToPaid, getAllOrders, updateOrderStatus, cancelMyOrder };
